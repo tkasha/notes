@@ -3,6 +3,7 @@ require "test_helper"
 class NotesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @note = notes(:one)
+    login_as @note.user
   end
 
   test "should get index" do
@@ -44,5 +45,13 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to notes_url
+  end
+
+  def login_as(user)
+    session = user.sessions.create!
+    Current.session = session
+    request = ActionDispatch::Request.new(Rails.application.env_config)
+    cookies = request.cookie_jar
+    cookies.signed[:session_id] = { value: session.id, httponly: true, same_site: :lax }
   end
 end

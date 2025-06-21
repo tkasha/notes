@@ -3,6 +3,7 @@ require "application_system_test_case"
 class NotesTest < ApplicationSystemTestCase
   setup do
     @note = notes(:one)
+    login_as @note.user
   end
 
   test "visiting the index" do
@@ -14,9 +15,8 @@ class NotesTest < ApplicationSystemTestCase
     visit notes_url
     click_on "New note"
 
-    fill_in "Body", with: @note.body
     fill_in "Title", with: @note.title
-    fill_in "User", with: @note.user_id
+    fill_in_rich_text_area "Body", with: @note.body
     click_on "Create Note"
 
     assert_text "Note was successfully created"
@@ -27,9 +27,8 @@ class NotesTest < ApplicationSystemTestCase
     visit note_url(@note)
     click_on "Edit this note", match: :first
 
-    fill_in "Body", with: @note.body
     fill_in "Title", with: @note.title
-    fill_in "User", with: @note.user_id
+    fill_in_rich_text_area "Body", with: @note.body
     click_on "Update Note"
 
     assert_text "Note was successfully updated"
@@ -41,5 +40,13 @@ class NotesTest < ApplicationSystemTestCase
     click_on "Destroy this note", match: :first
 
     assert_text "Note was successfully destroyed"
+  end
+
+  def login_as(user)
+    session = user.sessions.create!
+    Current.session = session
+    request = ActionDispatch::Request.new(Rails.application.env_config)
+    cookies = request.cookie_jar
+    cookies.signed[:session_id] = { value: session.id, httponly: true, same_site: :lax }
   end
 end
